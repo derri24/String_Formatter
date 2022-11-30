@@ -1,5 +1,6 @@
 ﻿
 
+using System.Linq.Expressions;
 using String_Formatter;
 
  void main()
@@ -21,8 +22,12 @@ public class User
 
     public string GetGreeting()
     {
+        Expression<Func<User, string>> firstNameAccessor = (User user) => user.FirstName;
+        Expression<Func<User, string>> lastNameAccessor = (User user) => user.LastName;
+        
+        
       return StringFormatter.Shared.Format(
-            "{{FirstName}} транслируется в {FirstName}", this); 
+            "{{{FirstName}}} {}транслируется {test} в {FirstName}", this); 
     }
 }
 

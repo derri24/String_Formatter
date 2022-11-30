@@ -15,41 +15,65 @@ public class StringFormatter : IStringFormatter
         return data;
     }
 
-    public void Replace(string template, Dictionary<string, string> data)
+    public string Replace(string template, Dictionary<string, string> data)
     {
-        int countOpen = 0;
-        for (int i = 0; i < template.Length; i++)
-        {
-            for (int j = 0; j < template.Length; j++)
-            {
-                if (template[i] == template[j] && template[j] == '{')
-                {
-                
-                } 
-            }
-        }
-    }
+        int countOpenBrackets = 0;
+        int i = 0;
+        var tempParameter = "";
 
-    //экранирование
+        while (i < template.Length)
+        {
+            if (template[i] == '{')
+                countOpenBrackets++;
+            else
+            {
+                if (countOpenBrackets == 1)
+                    if (template[i] != '}')
+                        tempParameter += template[i];
+                if (template[i] == '}')
+                {
+                    if (data.ContainsKey(tempParameter))
+                    {
+                        var startIndex = i - tempParameter.Length;
+                        var value = data[tempParameter];
+
+                        template = template.Remove(startIndex - 1, tempParameter.Length + 2);
+                        template = template.Insert(startIndex - 1, value);
+                    }
+                    tempParameter = "";
+                    countOpenBrackets = 0;
+                }
+            }
+            i++;
+        }
+        template = template.Replace("{{", "{");
+        template = template.Replace("}}", "}");
+        return template;
+    }
     private Dictionary<string, string> CreateDataDictionary(List<string> dataForReplace, object target)
     {
         Dictionary<string, string> data = new Dictionary<string, string>();
-        //string result = template;
         foreach (var element in dataForReplace)
         {
             var value = target.GetType().GetProperty(element)?.GetValue(target, null);
             data.Add(element, value.ToString());
-            // result = result.Replace("{" + element + "}", value.ToString());
         }
-
         return data;
     }
 
+    public bool CheckBracketsBalance(string template)
+    {
+        var countOpenBrackets = template.Count(ch=>ch=='{');
+        var countCloseBrackets = template.Count(ch=>ch=='}');
+        return countOpenBrackets == countCloseBrackets;
+    }
     public string Format(string template, object target)
     {
+        if (!CheckBracketsBalance(template))
+            throw new ArgumentException("The string contains unbalanced curly braces!");
         var dataForReplace = GetListOfPropertiesAndFields(target);
         var data = CreateDataDictionary(dataForReplace, target);
-        Replace(template, data);
-        return null;
+
+        return Replace(template, data);
     }
 }
