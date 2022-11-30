@@ -2,5 +2,5 @@
 
 public interface IStringFormatter
 {
-    string Format(string template, object target);
+    public string Format(string template, object target);
 }

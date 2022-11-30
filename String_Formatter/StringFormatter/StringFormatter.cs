@@ -1,9 +1,10 @@
-﻿namespace String_Formatter;
+﻿
+namespace String_Formatter;
 
 public class StringFormatter : IStringFormatter
 {
     public static readonly StringFormatter Shared = new StringFormatter();
-
+    
     private List<string> GetListOfPropertiesAndFields(object target)
     {
         List<string> data = new List<string>();
@@ -15,7 +16,7 @@ public class StringFormatter : IStringFormatter
         return data;
     }
 
-    public string Replace(string template, Dictionary<string, string> data)
+    private string Replace(string template, Dictionary<string, string> data)
     {
         int countOpenBrackets = 0;
         int i = 0;
@@ -39,6 +40,7 @@ public class StringFormatter : IStringFormatter
 
                         template = template.Remove(startIndex - 1, tempParameter.Length + 2);
                         template = template.Insert(startIndex - 1, value);
+                        i -= startIndex+Math.Abs(tempParameter.Length-value.Length)+1;
                     }
                     tempParameter = "";
                     countOpenBrackets = 0;
@@ -55,13 +57,13 @@ public class StringFormatter : IStringFormatter
         Dictionary<string, string> data = new Dictionary<string, string>();
         foreach (var element in dataForReplace)
         {
-            var value = target.GetType().GetProperty(element)?.GetValue(target, null);
+            var expression = ExpressionCreator.Create(target.GetType(), element);
+            var value = expression(target);
             data.Add(element, value.ToString());
         }
         return data;
     }
-
-    public bool CheckBracketsBalance(string template)
+    private bool CheckBracketsBalance(string template)
     {
         var countOpenBrackets = template.Count(ch=>ch=='{');
         var countCloseBrackets = template.Count(ch=>ch=='}');
@@ -76,4 +78,5 @@ public class StringFormatter : IStringFormatter
 
         return Replace(template, data);
     }
+
 }
